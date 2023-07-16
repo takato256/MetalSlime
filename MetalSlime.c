@@ -30,6 +30,7 @@ void myDisplay(void)
 
     glPushMatrix();  // 行列スタックに現在の変換行列を保存
     glTranslated(0.0, 0.0, 0.0);  // 現在の座標系での平行移動を設定
+    glScalef(1.2, 0.8, 1.0);  // 拡大縮小行列で球体の形状を変更
     glutSolidSphere(0.8, 20, 20);  // 球体の描画
     glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
 
