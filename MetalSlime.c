@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <GL/glut.h>
 
-void myInit(char *progname)
+void myInit(char* progname)
 {
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(500, 500);
@@ -14,9 +14,9 @@ void myInit(char *progname)
 
 void myDisplay(void)
 {
-    float ambient[] = {0.25, 0.25, 0.25, 1.0};  // 環境光の設定
-    float diffuse[] = {0.75, 0.75, 0.75, 1.0};  // 拡散反射の設定
-    float specular[] = {0.9, 0.9, 0.9, 1.0};   // 鏡面反射の設定
+    float ambient[] = { 0.1, 0.1, 0.1, 1.0 };  // より暗い環境光の設定
+    float diffuse[] = { 0.3, 0.3, 0.3, 1.0 };  // より暗い拡散反射の設定
+    float specular[] = { 0.9, 0.9, 0.9, 1.0 };   // 鏡面反射の設定
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -55,7 +55,7 @@ void myKeyboard(unsigned char key, int x, int y)
         exit(0);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
     myInit(argv[0]);
