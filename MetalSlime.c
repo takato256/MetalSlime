@@ -14,19 +14,19 @@ void myInit(char *progname)
 
 void myDisplay(void)
 {
-    float ambient[] = {0.5, 1.0, 0.5, 1.0};
-    float diffuse[] = {0.5, 1.0, 0.5, 1.0};
-    float specular[] = {0.5, 1.0, 0.5, 1.0};
+    float ambient[] = {0.25, 0.25, 0.25, 1.0};  // 環境光の設定
+    float diffuse[] = {0.75, 0.75, 0.75, 1.0};  // 拡散反射の設定
+    float specular[] = {0.9, 0.9, 0.9, 1.0};   // 鏡面反射の設定
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
 
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
-    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
-    glMaterialf(GL_FRONT, GL_SHININESS, 64.0);
+    glMaterialf(GL_FRONT, GL_SHININESS, 128.0);  // シャイニング度を増加
 
     glPushMatrix();
     glTranslated(0.0, 0.0, 0.0);
