@@ -5,6 +5,10 @@ int previousX, previousY;  // マウス座標の変数
 GLfloat rotationX = 0.0f;  // X軸回転角度
 GLfloat rotationY = 0.0f;  // Y軸回転角度
 
+GLfloat translationZ = 0.0f;  // Z軸平行移動量
+GLfloat translationSpeed = 0.1f;  // 平行移動の速度
+
+
 void myInit(char* progname)
 {
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);  // ディスプレイモードの初期化
@@ -35,19 +39,24 @@ void myDisplay(void)
     glPushMatrix();  // 行列スタックに現在の変換行列を保存
     glRotatef(rotationX, 0.0f, 1.0f, 0.0f);  // X軸回転
     glRotatef(rotationY, 1.0f, 0.0f, 0.0f);  // Y軸回転
-    glTranslated(0.0, 0.0, 0.0);  // 現在の座標系での平行移動を設定
-    glScalef(1.2, 0.8, 1.0);  // 拡大縮小行列で球体の形状を変更
-    glutSolidSphere(0.8, 20, 20);  // 球体の描画
+    glTranslated(0.0, 0.0, translationZ);  // 現在の座標系での平行移動を設定
 
-    // 頂点の丸い三角錐の描画
-    glPushMatrix();  // 行列スタックに現在の変換行列を保存
-    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);  // X軸周りに90度回転
-    glTranslatef(0.0, 0.0, -0.72);  // 三角錐の座標変換
-    glRotatef(180.0f, 1.0f, 0.0f, 0.0f);  // 三角錐を逆さまに回転
-    glutSolidCone(0.2, 0.4, 10, 10);  // 三角錐の描画
+        glPushMatrix();  // 行列スタックに現在の変換行列を保存
+        glTranslated(0.0, 0.0, 0.0);  // 現在の座標系での平行移動を設定
+        glScalef(1.2, 0.8, 1.0);  // 拡大縮小行列で球体の形状を変更
+        glutSolidSphere(0.8, 20, 20);  // 球体の描画
+        glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
+
+        // 頂点の丸い三角錐の描画
+        glPushMatrix();  // 行列スタックに現在の変換行列を保存
+        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);  // X軸周りに90度回転
+        glTranslatef(0.0, 0.0, -0.53);  // 三角錐の座標変換
+        glRotatef(180.0f, 1.0f, 0.0f, 0.0f);  // 三角錐を逆さまに回転
+        glutSolidCone(0.2, 0.4, 10, 10);  // 三角錐の描画
+        glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
+
     glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
 
-    glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
 
     glFlush();  // OpenGLのコマンドを実行
     glDisable(GL_LIGHTING);  // ライティングの無効化
@@ -63,6 +72,24 @@ void myReshape(int width, int height)
     glMatrixMode(GL_MODELVIEW);  // モデルビュー行列を指定
     glLoadIdentity();  // 単位行列で初期化
     glTranslated(0.0, 0.0, -3.6);  // 平行移動の設定
+}
+
+void escapeMotion()
+{
+    if (translationZ <= -3.0f)
+        return;  // 一定距離移動したらアニメーションを停止
+
+    translationZ -= translationSpeed;
+    glutPostRedisplay();
+    glutTimerFunc(10, escapeMotion, 0);
+}
+
+void menuSelect(int value)
+{
+    if (value == 1)  // メニューの項目が選択されたら逃げ出すアニメーションを開始
+    {
+        glutTimerFunc(10, escapeMotion, 0);
+    }
 }
 
 void myMouse(int button, int state, int x, int y)
@@ -93,6 +120,12 @@ int main(int argc, char** argv)
 {
     glutInit(&argc, argv);  // GLUTの初期化
     myInit(argv[0]);  // プログラムの初期化
+
+     // メニューを作成
+    glutCreateMenu(menuSelect);
+    glutAddMenuEntry("nigeru", 1);
+    glutAttachMenu(GLUT_RIGHT_BUTTON);  // 右クリック時にメニューを表示
+
     glutKeyboardFunc(myKeyboard);  // キーボードイベントのコールバック関数を設定
     glutReshapeFunc(myReshape);  // ウィンドウリサイズイベントのコールバック関数を設定
     glutDisplayFunc(myDisplay);  // 描画イベントのコールバック関数を設定
