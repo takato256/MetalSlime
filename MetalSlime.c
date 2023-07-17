@@ -20,7 +20,7 @@ void myDisplay(void)
 {
     float ambient[] = { 0.1, 0.1, 0.1, 1.0 };  // 環境光の設定
     float diffuse[] = { 0.3, 0.3, 0.3, 1.0 };  // 拡散反射の設定
-    float specular[] = { 0.9, 0.9, 0.9, 1.0 };  // 鏡面反射の設定
+    float specular[] = { 1.0, 1.0, 1.0, 1.0 };  // 鏡面反射の設定 (変更)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // カラーバッファとデプスバッファのクリア
 
@@ -29,7 +29,7 @@ void myDisplay(void)
 
     glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);  // 球体の材質の環境光成分を設定
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);  // 球体の材質の拡散反射成分を設定
-    glMaterialfv(GL_FRONT, GL_SPECULAR, specular);  // 球体の材質の鏡面反射成分を設定
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specular);  // 球体の材質の鏡面反射成分を設定 (変更)
     glMaterialf(GL_FRONT, GL_SHININESS, 128.0);  // 球体の材質のシャイニング度を設定
 
     glPushMatrix();  // 行列スタックに現在の変換行列を保存
