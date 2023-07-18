@@ -20,62 +20,49 @@ void myInit(char* progname)
     glEnable(GL_LIGHT0);  // ライト0の有効化
 }
 
-#define	imageWidth 256
-#define	imageHeight 256
+#define	imageWidth  64
+#define	imageHeight 64
 
-unsigned char texImage[imageHeight][imageWidth][3];
+unsigned char texImage[imageHeight][imageWidth][4];
 
-void drawFloor(void)
+void makeTexImage()
 {
-    // テクスチャマッピングの設定
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 1); // テクスチャのバインド
+    int i, j, c;
 
-    glPushMatrix();
-    glBegin(GL_QUADS);
-    glTexCoord2d(0.0, 0.0); glVertex3d(-10.0, -2.0, -10.0);
-    glTexCoord2d(0.0, 1.0); glVertex3d(-10.0, -2.0, 10.0);
-    glTexCoord2d(1.0, 1.0); glVertex3d(10.0, -2.0, 10.0);
-    glTexCoord2d(1.0, 0.0); glVertex3d(10.0, -2.0, -10.0);
-    glEnd();
-    glPopMatrix();
-
-    glDisable(GL_TEXTURE_2D);
-}
-
-void readPPMImage(char* filename)
-{
-    FILE* fp;
-    int  ch, i;
-
-    if (fopen_s(&fp, filename, "r") != 0) {
-        fprintf(stderr, "Cannot open ppm file %s\n", filename);
-        exit(1);
+    for (i = 0; i < imageHeight; i++) {
+        for (j = 0; j < imageWidth; j++) {
+            c = ((((i & 0x10) == 0) ^ ((j & 0x10)) == 0)) * 255;
+            texImage[i][j][0] = (unsigned char)c;			// red
+            texImage[i][j][1] = (unsigned char)0;			// green
+            texImage[i][j][2] = (unsigned char)~c;			// blue
+            texImage[i][j][3] = (unsigned char)255;		// alpha
+        }
     }
-    
-    fread(texImage, 1, imageWidth * imageHeight * 3, fp);	// read RGB data
-    fclose(fp);
 }
 
-void setUpTexture(void)
+
+void setUpTexure(void)
 {
-    readPPMImage("floor.ppm");
+    makeTexImage();
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight,
-        0, GL_RGB, GL_UNSIGNED_BYTE, texImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, texImage);
 }
 
 void myDisplay(void)
 {
     
-    float ambient[] = { 0.1, 0.1, 0.1, 0.1 };  // 環境光の設定
-    float diffuse[] = { 0.3, 0.3, 0.3, 1.0 };  // 拡散反射の設定
-    float specular[] = { 0.8, 0.8, 0.8, 1.0 };  // 鏡面反射の設定 (変更)
+    float ambient[] = { 1.0, 1.0, 1.0, 0.5 };  // 環境光の設定
+    float diffuse[] = { 0.7, 0.7, 0.7, 1.0 };  // 拡散反射の設定
+    float specular[] = { 2.0, 2.0, 2.0, 1.0 };  // 鏡面反射の設定 (変更)
     
+    double	tc = 2.0;
+    double	p0[] = { -5.0, -5.0, 0.0 }, p1[] = { 0.0, -5.0, 0.0 },
+        p2[] = { 0.0, 5.0, 0.0 }, p3[] = { -10.0, 5.0, 0.0 };
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // カラーバッファとデプスバッファのクリア
 
@@ -85,7 +72,12 @@ void myDisplay(void)
 
     
     glPushMatrix();
-    drawFloor();
+    glBegin(GL_QUADS);
+    glTexCoord2d(0.0, 0.0); glVertex3dv(p0);
+    glTexCoord2d(tc, 0.0); glVertex3dv(p1);
+    glTexCoord2d(tc, tc); glVertex3dv(p2);
+    glTexCoord2d(0.0, tc); glVertex3dv(p3);
+    glEnd();
     glPopMatrix();
     
 
@@ -95,9 +87,9 @@ void myDisplay(void)
     glMaterialfv(GL_FRONT, GL_SPECULAR, specular);  // 球体の材質の鏡面反射成分を設定 (変更)
     glMaterialf(GL_FRONT, GL_SHININESS, 128.0);  // 球体の材質のシャイニング度を設定
     
-
     
-    // 真ん中のメタルスライム
+    
+    // 真ん中のスライム
     glPushMatrix();  // 行列スタックに現在の変換行列を保存
 
         glRotatef(rotationX, 0.0f, 1.0f, 0.0f);  // X軸回転
@@ -121,7 +113,7 @@ void myDisplay(void)
     glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
 
 
-    // 上のメタルスライム
+    // 上のスライム
     glPushMatrix();  // 行列スタックに現在の変換行列を保存
 
         glRotatef(rotationX, 0.0f, 1.0f, 0.0f);  // X軸回転
@@ -145,7 +137,7 @@ void myDisplay(void)
     glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
 
 
-    // 下のメタルスライム
+    // 下のスライム
     glPushMatrix();  // 行列スタックに現在の変換行列を保存
 
         glRotatef(rotationX, 0.0f, 1.0f, 0.0f);  // X軸回転
@@ -168,10 +160,12 @@ void myDisplay(void)
 
     glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
     
+    
 
 
 
     glFlush();  // OpenGLのコマンドを実行
+    glDisable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);  // ライティングの無効化
     glDisable(GL_DEPTH_TEST);  // デプステストの無効化
 }
@@ -189,7 +183,7 @@ void myReshape(int width, int height)
 
 void escapeMotion()
 {
-    if (translationZ <= -10.0f)
+    if (translationZ <= -3.0f)
         return;  // 一定距離移動したらアニメーションを停止
 
     translationZ -= translationSpeed;
@@ -234,7 +228,7 @@ int main(int argc, char** argv)
     glutInit(&argc, argv);  // GLUTの初期化
     myInit(argv[0]);  // プログラムの初期化
 
-    setUpTexture();
+    setUpTexure();
 
      // メニューを作成
     glutCreateMenu(menuSelect);
