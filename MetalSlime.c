@@ -15,31 +15,94 @@ void myInit(char* progname)
     glutInitWindowSize(500, 500);  // ウィンドウサイズの初期化
     glutInitWindowPosition(0, 0);  // ウィンドウ位置の初期化
     glutCreateWindow(progname);  // ウィンドウの作成
-    glClearColor(0.0, 0.0, 0.0, 0.0);  // 背景色の設定
+    glClearColor(0.0, 0.0, 0.0, 1.0);  // 背景色の設定
     glShadeModel(GL_SMOOTH);  // シェーディングモデルの設定
     glEnable(GL_LIGHT0);  // ライト0の有効化
 }
 
+#define	imageWidth 256
+#define	imageHeight 256
+
+unsigned char texImage[imageHeight][imageWidth][3];
+
+void drawFloor(void)
+{
+    // テクスチャマッピングの設定
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 1); // テクスチャのバインド
+
+    glPushMatrix();
+    glBegin(GL_QUADS);
+    glTexCoord2d(0.0, 0.0); glVertex3d(-10.0, -2.0, -10.0);
+    glTexCoord2d(0.0, 1.0); glVertex3d(-10.0, -2.0, 10.0);
+    glTexCoord2d(1.0, 1.0); glVertex3d(10.0, -2.0, 10.0);
+    glTexCoord2d(1.0, 0.0); glVertex3d(10.0, -2.0, -10.0);
+    glEnd();
+    glPopMatrix();
+
+    glDisable(GL_TEXTURE_2D);
+}
+
+void readPPMImage(char* filename)
+{
+    FILE* fp;
+    int  ch, i;
+
+    if (fopen_s(&fp, filename, "r") != 0) {
+        fprintf(stderr, "Cannot open ppm file %s\n", filename);
+        exit(1);
+    }
+    
+    fread(texImage, 1, imageWidth * imageHeight * 3, fp);	// read RGB data
+    fclose(fp);
+}
+
+void setUpTexture(void)
+{
+    readPPMImage("floor.ppm");
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight,
+        0, GL_RGB, GL_UNSIGNED_BYTE, texImage);
+}
+
 void myDisplay(void)
 {
-    float ambient[] = { 0.1, 0.1, 0.1, 1.0 };  // 環境光の設定
+    
+    float ambient[] = { 0.1, 0.1, 0.1, 0.1 };  // 環境光の設定
     float diffuse[] = { 0.3, 0.3, 0.3, 1.0 };  // 拡散反射の設定
-    float specular[] = { 1.0, 1.0, 1.0, 1.0 };  // 鏡面反射の設定 (変更)
+    float specular[] = { 0.8, 0.8, 0.8, 1.0 };  // 鏡面反射の設定 (変更)
+    
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // カラーバッファとデプスバッファのクリア
 
     glEnable(GL_DEPTH_TEST);  // デプステストの有効化
     glEnable(GL_LIGHTING);  // ライティングの有効化
+    glEnable(GL_TEXTURE_2D);
 
+    
+    glPushMatrix();
+    drawFloor();
+    glPopMatrix();
+    
+
+    
     glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);  // 球体の材質の環境光成分を設定
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);  // 球体の材質の拡散反射成分を設定
     glMaterialfv(GL_FRONT, GL_SPECULAR, specular);  // 球体の材質の鏡面反射成分を設定 (変更)
     glMaterialf(GL_FRONT, GL_SHININESS, 128.0);  // 球体の材質のシャイニング度を設定
+    
 
+    
+    // 真ん中のメタルスライム
     glPushMatrix();  // 行列スタックに現在の変換行列を保存
-    glRotatef(rotationX, 0.0f, 1.0f, 0.0f);  // X軸回転
-    glRotatef(rotationY, 1.0f, 0.0f, 0.0f);  // Y軸回転
-    glTranslated(0.0, 0.0, translationZ);  // 現在の座標系での平行移動を設定
+
+        glRotatef(rotationX, 0.0f, 1.0f, 0.0f);  // X軸回転
+        glRotatef(rotationY, 1.0f, 0.0f, 0.0f);  // Y軸回転
+        glTranslated(0.0, 0.0, translationZ);  // 現在の座標系での平行移動を設定
 
         glPushMatrix();  // 行列スタックに現在の変換行列を保存
         glTranslated(0.0, 0.0, 0.0);  // 現在の座標系での平行移動を設定
@@ -47,7 +110,7 @@ void myDisplay(void)
         glutSolidSphere(0.8, 20, 20);  // 球体の描画
         glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
 
-        // 頂点の丸い三角錐の描画
+        // 三角錐の描画
         glPushMatrix();  // 行列スタックに現在の変換行列を保存
         glRotatef(90.0f, 1.0f, 0.0f, 0.0f);  // X軸周りに90度回転
         glTranslatef(0.0, 0.0, -0.53);  // 三角錐の座標変換
@@ -56,6 +119,56 @@ void myDisplay(void)
         glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
 
     glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
+
+
+    // 上のメタルスライム
+    glPushMatrix();  // 行列スタックに現在の変換行列を保存
+
+        glRotatef(rotationX, 0.0f, 1.0f, 0.0f);  // X軸回転
+        glRotatef(rotationY, 1.0f, 0.0f, 0.0f);  // Y軸回転
+        glTranslated(0.0, 1.2, translationZ);  // 現在の座標系での平行移動を設定
+
+        glPushMatrix();  // 行列スタックに現在の変換行列を保存
+        glTranslated(0.0, 0.0, 0.0);  // 現在の座標系での平行移動を設定
+        glScalef(1.2, 0.8, 1.0);  // 拡大縮小行列で球体の形状を変更
+        glutSolidSphere(0.8, 20, 20);  // 球体の描画
+        glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
+
+        // 三角錐の描画
+        glPushMatrix();  // 行列スタックに現在の変換行列を保存
+        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);  // X軸周りに90度回転
+        glTranslatef(0.0, 0.0, -0.53);  // 三角錐の座標変換
+        glRotatef(180.0f, 1.0f, 0.0f, 0.0f);  // 三角錐を逆さまに回転
+        glutSolidCone(0.2, 0.4, 10, 10);  // 三角錐の描画
+        glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
+
+    glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
+
+
+    // 下のメタルスライム
+    glPushMatrix();  // 行列スタックに現在の変換行列を保存
+
+        glRotatef(rotationX, 0.0f, 1.0f, 0.0f);  // X軸回転
+        glRotatef(rotationY, 1.0f, 0.0f, 0.0f);  // Y軸回転
+        glTranslated(0.0, -1.2, translationZ);  // 現在の座標系での平行移動を設定
+
+        glPushMatrix();  // 行列スタックに現在の変換行列を保存
+        glTranslated(0.0, 0.0, 0.0);  // 現在の座標系での平行移動を設定
+        glScalef(1.2, 0.8, 1.0);  // 拡大縮小行列で球体の形状を変更
+        glutSolidSphere(0.8, 20, 20);  // 球体の描画
+        glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
+
+        // 三角錐の描画
+        glPushMatrix();  // 行列スタックに現在の変換行列を保存
+        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);  // X軸周りに90度回転
+        glTranslatef(0.0, 0.0, -0.53);  // 三角錐の座標変換
+        glRotatef(180.0f, 1.0f, 0.0f, 0.0f);  // 三角錐を逆さまに回転
+        glutSolidCone(0.2, 0.4, 10, 10);  // 三角錐の描画
+        glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
+
+    glPopMatrix();  // 行列スタックから最後の変換行列を取り出して復元
+    
+
 
 
     glFlush();  // OpenGLのコマンドを実行
@@ -71,12 +184,12 @@ void myReshape(int width, int height)
     gluPerspective(60.0, (double)width / (double)height, 0.1, 20.0);  // 透視投影の設定
     glMatrixMode(GL_MODELVIEW);  // モデルビュー行列を指定
     glLoadIdentity();  // 単位行列で初期化
-    glTranslated(0.0, 0.0, -3.6);  // 平行移動の設定
+    glTranslated(0.0, 0.0, -5.0);  // 平行移動の設定
 }
 
 void escapeMotion()
 {
-    if (translationZ <= -3.0f)
+    if (translationZ <= -10.0f)
         return;  // 一定距離移動したらアニメーションを停止
 
     translationZ -= translationSpeed;
@@ -120,6 +233,8 @@ int main(int argc, char** argv)
 {
     glutInit(&argc, argv);  // GLUTの初期化
     myInit(argv[0]);  // プログラムの初期化
+
+    setUpTexture();
 
      // メニューを作成
     glutCreateMenu(menuSelect);
